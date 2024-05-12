@@ -8,13 +8,17 @@ export default function Game() {
     const xIsNext = currentMove % 2 === 0;
     const currentSquares = history[currentMove];
 
-    function handlePlay(nextSquares) {
+    const [moveHistory, setMoveHistory] = useState(Array(0));
+
+    function handlePlay(nextSquares, moveHistory) {
         //Creates new array that contains all items till current move followed by nextSquares
         const nextHistory = [...history.slice(0, currentMove + 1), nextSquares]
         //When the move made, update last move ot be current set of squares
         setHistory(nextHistory);
         //Each time move made, update currentMove to point to latest entry history
         setCurrentMove(nextHistory.length - 1);
+
+        setMoveHistory(moveHistory);
     }
 
     function jumpTo(nextMove) {
@@ -23,15 +27,25 @@ export default function Game() {
 
     const moves = history.map((squares, move) => {
         let description;
+
+        let tempRow = Math.floor(moveHistory[move-1] / 3) + 1;
+        let tempCol = moveHistory[move-1] % 3 + 1;
+        let positionText;
+
         if (move > 0) {
           description = 'Go to move #' + move;
+          positionText = "You are at move " + move + " at position (" + tempRow + ", " + tempCol + ")";
         } else {
           description = 'Go to game start';
+          positionText = "You are at move 0";
         }
+
+
+
         return (
           <li key={move}>
             <button onClick={() => jumpTo(move)}>{description}</button>
-            <div>You are at move {move}</div>
+            <div>{positionText}</div>
           </li>
         );
       });
@@ -41,13 +55,13 @@ export default function Game() {
       }
 
     function toggleSort() {
-        setAscending(!ascending);
+        setAscending(!ascending); //Changes the boolean flag
     }
 
     return (
         <div className = "game">
             <div className = "game-board">
-                <Board xIsNext={xIsNext} squares = {currentSquares} onPlay={handlePlay}/>
+                <Board xIsNext={xIsNext} squares = {currentSquares} onPlay={handlePlay} moveHistory={moveHistory}/>
             </div>
             <div className = "game-info">
                 <ol>{moves}</ol>
@@ -59,7 +73,7 @@ export default function Game() {
     );
 }
 
-function Board({xIsNext, squares, onPlay}) {
+function Board({xIsNext, squares, onPlay, moveHistory}) {
 
   function handleClick(i) {
 
@@ -67,12 +81,18 @@ function Board({xIsNext, squares, onPlay}) {
         return;
     }
     const nextSquares = squares.slice();
+
+    const moveHistoryCopy = moveHistory.slice();
+
+
     if (xIsNext) {
         nextSquares[i] = "X";
+        moveHistoryCopy.push(i);
     } else {
         nextSquares[i] = "O";
+        moveHistoryCopy.push(i);
     }
-    onPlay(nextSquares);
+    onPlay(nextSquares, moveHistoryCopy);
   }
 
   const winner = calculateWinner(squares);
